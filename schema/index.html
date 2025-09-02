@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مستندات پایگاه داده MongoDB برای سیستم چت</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap");
+
+      /* --- 1. Root Variables & Reset --- */
+      :root {
+        --color-primary: #58a6ff;
+        --color-primary-rgb: 88, 166, 255;
+        --color-success: #56d364;
+        --color-warning: #e3b341;
+        --color-danger: #f85149;
+        --color-bg: #0d1117;
+        --color-surface: #161b22;
+        --color-border: #30363d;
+        --color-text: #c9d1d9;
+        --color-dark: #f0f6fc;
+        --color-muted: #8b949e;
+        --color-code-bg: #22272e;
+        --color-code-text: #ff7b72;
+        --font-family-base: "Vazirmatn", sans-serif;
+        --spacing-1: 0.25rem;
+        --spacing-2: 0.5rem;
+        --spacing-3: 1rem;
+        --spacing-4: 1.5rem;
+        --spacing-5: 2rem;
+        --border-radius-md: 0.6rem;
+        --border-radius-lg: 0.8rem;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* --- 2. General Styles --- */
+      body {
+        font-family: var(--font-family-base);
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.7;
+        padding: var(--spacing-4);
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      h1, h2, h3 {
+        color: var(--color-dark);
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      h1 { font-size: 2.2rem; }
+      h2 { font-size: 1.75rem; }
+      h3 {
+        font-size: 1.25rem;
+        margin-top: var(--spacing-4);
+        color: var(--color-primary);
+      }
+
+      p { margin-bottom: var(--spacing-3); }
+
+      strong {
+        color: var(--color-primary);
+        font-weight: 600;
+      }
+
+      ol, ul { padding-right: var(--spacing-4); }
+      li { margin-bottom: var(--spacing-2); }
+
+      /* --- 3. Layout Sections --- */
+      header {
+        text-align: center;
+        margin-bottom: var(--spacing-5);
+        padding-bottom: var(--spacing-4);
+        border-bottom: 2px solid var(--color-primary);
+      }
+
+      header h1 { color: var(--color-primary); }
+      header p {
+        font-size: 1.1rem;
+        color: var(--color-muted);
+        max-width: 700px;
+        margin: var(--spacing-2) auto 0;
+      }
+
+      .section {
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
+        padding: var(--spacing-4) var(--spacing-5);
+        margin-bottom: var(--spacing-4);
+      }
+
+      .section h2 {
+        padding-bottom: var(--spacing-3);
+        margin-bottom: var(--spacing-4);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      /* --- 4. Merged Styles for Code & Specific Components --- */
+      pre {
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        padding: var(--spacing-4);
+        border-radius: var(--border-radius-md);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        direction: ltr;
+        text-align: left;
+        font-size: 0.9em;
+        line-height: 1.6;
+        border: 1px solid var(--color-border);
+      }
+
+      code {
+        background-color: var(--color-code-bg);
+        color: var(--color-code-text);
+        padding: var(--spacing-1) var(--spacing-2);
+        border-radius: var(--border-radius-md);
+        font-family: monospace;
+        direction: ltr;
+        display: inline-block;
+        font-size: 0.9em;
+        border: 1px solid var(--color-border);
+      }
+
+      .relationship-section ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      .relationship-section li {
+        background-color: var(--color-bg);
+        border: 1px solid var(--color-border);
+        margin-bottom: var(--spacing-3);
+        padding: var(--spacing-3);
+        border-radius: var(--border-radius-md);
+        border-right-width: 4px;
+      }
+      .rel-embed { border-right-color: var(--color-success); }
+      .rel-ref { border-right-color: var(--color-warning); }
+
+      .footer {
+        text-align: center;
+        margin-top: var(--spacing-5);
+        padding-top: var(--spacing-4);
+        border-top: 1px solid var(--color-border);
+        color: var(--color-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>📄 مستندات پایگاه داده MongoDB برای سیستم چت</h1>
+        <p>
+          این سند به تشریح کامل ساختار کالکشن‌ها، مفاهیم کلیدی و مدل‌سازی
+          داده‌ها در MongoDB می‌پردازد.
+        </p>
+      </header>
+
+      <div class="section" id="users-access-control">
+        <h2>👤 کاربران، دپارتمان‌ها و کنترل دسترسی</h2>
+        <p>
+          اساس سیستم بر پایه داکیومنت‌های <strong>کاربران</strong> و نحوه تعامل
+          آن‌ها با سیستم بنا شده است.
+        </p>
+
+        <h3>داکیومنت یکپارچه کاربر (Unified User Document)</h3>
+        <p>
+          موجودیت اصلی سیستم، کالکشن <code>users</code> است. به جای چندین جدول،
+          هر کاربر یک داکیومنت جامع دارد که تمام اطلاعات مرتبط با او را در خود
+          جای داده است:
+        </p>
+        <ol>
+          <li>
+            <strong>اطلاعات پایه:</strong> فیلدهایی مانند <code>email</code> و
+            <code>status</code> مستقیماً در داکیومنت ذخیره می‌شوند.
+          </li>
+          <li>
+            <strong>ویژگی‌ها (Attributes):</strong> به جای جدول جداگانه، یک
+            آبجکت تو در تو به نام <code>attributes</code> داریم. این ساختار
+            انعطاف‌پذیر به ما اجازه می‌دهد بی‌نهایت ویژگی کلید-مقدار (مانند
+            <code>job_title</code>) به کاربر اضافه کنیم.
+          </li>
+          <li>
+            <strong>دپارتمان‌ها (Departments):</strong> کاربران از طریق یک آرایه
+            از شناسه‌ها به نام <code>department_ids</code> به کالکشن
+            <code>departments</code> ارجاع داده می‌شوند.
+          </li>
+          <li>
+            <strong>جلسات (Sessions):</strong> توکن‌های احراز هویت هر کاربر در
+            یک آرایه تو در تو به نام <code>sessions</code> درون داکیومنت خود
+            کاربر ذخیره می‌شود.
+          </li>
+        </ol>
+
+        <h3>احراز هویت و کنترل دسترسی مبتنی بر ویژگی (ABAC)</h3>
+        <p>
+            این مدل داده برای پیاده‌سازی <strong>کنترل دسترسی مبتنی بر ویژگی (ABAC)</strong> ایده‌آل است. مجوزها بر اساس فیلدهای موجود در آبجکت <code>attributes</code> هر کاربر تعیین می‌شود. برای مثال، اگر کاربری فیلد <code>attributes.canCloseTicket</code> با مقدار <code>true</code> را داشته باشد، سیستم به او اجازه بستن تیکت را می‌دهد.
+        </p>
+      </div>
+
+      <div class="section" id="communication-system">
+        <h2>💬 سیستم ارتباطی: کالکشن Chats</h2>
+        <h3>داکیومنت چت (Chat Document)</h3>
+        <p>
+          کالکشن <code>chats</code> قلب سیستم ارتباطی است. هر داکیومنت در این
+          کالکشن، یک مکالمه کامل را در خود نگه می‌دارد. یک فیلد کلیدی به نام
+          <code>type</code>، ماهیت مکالمه را مشخص می‌کند:
+        </p>
+        <ul>
+          <li><code>type = 'CHAT'</code>: یک گفتگوی زنده و آنی.</li>
+          <li>
+            <code>type = 'TICKET'</code>: یک درخواست پشتیبانی رسمی با قابلیت
+            پیگیری.
+          </li>
+        </ul>
+
+        <h3>پیام‌های تو در تو (Embedded Messages)</h3>
+        <p>
+          به جای یک جدول جداگانه، تمام پیام‌های یک مکالمه در یک آرایه به نام
+          <code>messages</code> درون همان داکیومنت چت ذخیره می‌شوند. این
+          مدل‌سازی مزیت اصلی MongoDB برای این سیستم است، زیرا برای بازیابی کل
+          تاریخچه یک چت، تنها یک کوئری لازم است.
+        </p>
+      </div>
+
+      <div class="section" id="schema-reference">
+        <h2>🗂️ مرجع کامل کالکشن‌ها</h2>
+
+        <h3>👤 کالکشن کاربران (users)</h3>
+        <p>
+          این کالکشن شامل تمام اطلاعات کاربران، ویژگی‌ها و نشست‌های آن‌هاست.
+        </p>
+        <pre><code>
+{
+  "_id": ObjectId("..."),
+  "email": "user@example.com",
+  "hashPassword": "...",
+  "status": "ACTIVE", // ACTIVE, INACTIVE, BANNED
+  "isOnline": true,
+  "createdAt": ISODate("..."),
+  "department_ids": [ 
+    ObjectId("..."), // Ref to departments collection
+    ObjectId("...") 
+  ],
+  "attributes": {
+    "fullName": "نام کاربر",
+    "permission_level": "admin"
+  },
+  "sessions": [
+    {
+      "token": "...",
+      "createdAt": ISODate("..."),
+      "expiresAt": ISODate("...")
+    }
+  ]
+}
+        </code></pre>
+
+        <h3>🏢 کالکشن دپارتمان‌ها (departments)</h3>
+        <p>کالکشنی ساده برای تعریف تیم‌ها و گروه‌های کاری که کاربران به آن ارجاع داده می‌شوند.</p>
+        <pre><code>
+{
+  "_id": ObjectId("..."),
+  "name": "پشتیبانی فنی",
+  "description": "تیم مسئول پاسخگویی به مشکلات فنی کاربران"
+}
+        </code></pre>
+
+        <h3>💬 کالکشن چت‌ها (chats)</h3>
+        <p>هر داکیومنت در این کالکشن یک مکالمه کامل با تمام پیام‌هایش است.</p>
+        <pre><code>
+{
+  "_id": ObjectId("..."),
+  "title": "مشکل در ورود به سیستم",
+  "status": "OPEN", // OPEN, CLOSED, PENDING
+  "type": "TICKET", // TICKET, CHAT
+  "participants": [
+    { "user_id": ObjectId("..."), "role": "customer" },
+    { "user_id": ObjectId("..."), "role": "operator" }
+  ],
+  "createdAt": ISODate("..."),
+  "updatedAt": ISODate("..."),
+  "endedAt": null,
+  "messages": [
+    {
+      "_id": ObjectId("..."),
+      "content": "سلام، من مشکل دارم.",
+      "sender_id": ObjectId("..."),
+      "createdAt": ISODate("..."),
+      "isSystemMessage": false,
+      "replyTo_id": null
+    }
+  ]
+}
+        </code></pre>
+      </div>
+
+      <div class="section" id="redis-caching">
+        <h2>💾 کش کردن در Redis</h2>
+        <p>
+          برای افزایش عملکرد، داده‌هایی که زیاد خوانده می‌شوند باید در Redis کش
+          شوند تا فشار از روی <strong>MongoDB</strong> برداشته شود. مهم‌ترین
+          موارد عبارتند از:
+        </p>
+        <ul>
+          <li>
+            <strong>وضعیت آنلاین بودن کاربر (User Presence):</strong> برای نمایش
+            لحظه‌ای وضعیت کاربران.
+          </li>
+          <li>
+            <strong>اطلاعات اپراتورهای در دسترس:</strong> برای مسیریابی سریع
+            چت‌های جدید.
+          </li>
+          <li>
+            <strong>صف‌های پردازش پس‌زمینه (Background Job Queues):</strong>
+            برای مدیریت کارهای غیرهمزمان.
+          </li>
+        </ul>
+      </div>
+
+      <div class="section" id="relationships">
+        <h2>🔗 مدل‌سازی روابط در MongoDB</h2>
+        <div class="relationship-section">
+          <p>در MongoDB، روابط به دو روش اصلی مدل‌سازی می‌شوند:</p>
+          <ul>
+            <li class="rel-embed">
+              <strong>ادغام (Embedding):</strong> برای روابط "یک به چند" که
+              داده‌ها به هم وابستگی شدیدی دارند. <br /><strong>مثال:</strong>
+              آرایه <code>messages</code> درون هر داکیومنت <code>chats</code> و
+              آبجکت <code>attributes</code> درون هر داکیومنت <code>users</code>.
+            </li>
+            <li class="rel-ref">
+              <strong>ارجاع (Referencing):</strong> برای روابط "چند به چند" یا
+              زمانی که حجم داده‌های مرتبط زیاد است. <br /><strong>مثال:</strong>
+              آرایه <code>department_ids</code> در داکیومنت
+              <code>users</code> که به شناسه‌های کالکشن
+              <code>departments</code> ارجاع می‌دهد.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>این مستند در تاریخ ۱ سپتامبر ۲۰۲۵ به‌روزرسانی شده است.</p>
+      </footer>
+    </div>
+  </body>
+</html>

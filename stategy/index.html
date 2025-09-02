@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>استراتژی بک‌اند برای سیستم گفتگوی یکپارچه با MongoDB</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap");
+
+    /* --- 1. Root Variables & Reset (Dark Theme) --- */
+    :root {
+      /* Color Palette */
+      --color-primary: #58a6ff;
+      --color-primary-rgb: 88, 166, 255;
+      --color-success: #56d364;
+      --color-warning: #e3b341;
+      --color-danger: #f85149;
+      --color-info: #58d6f1;
+      --color-dark: #f0f6fc;
+      --color-muted: #8b949e;
+
+      --color-bg: #0d1117;
+      --color-surface: #161b22;
+      --color-border: #30363d;
+      --color-text: #c9d1d9;
+      --color-code-bg: #22272e;
+      --color-code-text: #ff7b72;
+
+      /* Typography & Spacing */
+      --font-family-base: "Vazirmatn", sans-serif;
+      --spacing-1: 0.25rem;
+      --spacing-2: 0.5rem;
+      --spacing-3: 1rem;
+      --spacing-4: 1.5rem;
+      --spacing-5: 2rem;
+      --border-radius-md: 0.6rem;
+      --border-radius-lg: 0.8rem;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* --- 2. General Styles --- */
+    body {
+      font-family: var(--font-family-base);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.7;
+      padding: var(--spacing-4);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 {
+      color: var(--color-dark);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 1.75rem; }
+    h3 { font-size: 1.25rem; margin-top: var(--spacing-4); }
+
+    p { margin-bottom: var(--spacing-2); }
+
+    code {
+      background-color: var(--color-code-bg);
+      color: var(--color-code-text);
+      padding: var(--spacing-1) var(--spacing-2);
+      border-radius: var(--border-radius-md);
+      font-family: monospace;
+      direction: ltr;
+      display: inline-block;
+      font-size: 0.9em;
+      border: 1px solid var(--color-border);
+    }
+
+    strong {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    /* --- 3. Layout Sections --- */
+    header {
+      text-align: center;
+      margin-bottom: var(--spacing-5);
+      padding-bottom: var(--spacing-4);
+      border-bottom: 2px solid var(--color-primary);
+    }
+
+    header h1 { color: var(--color-primary); }
+
+    header p {
+      font-size: 1.1rem;
+      color: var(--color-muted);
+      max-width: 600px;
+      margin: var(--spacing-2) auto 0;
+    }
+
+    .section {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-4) var(--spacing-5);
+      margin-bottom: var(--spacing-5);
+    }
+
+    .section h2 {
+      padding-bottom: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    ul {
+      list-style-type: none;
+      padding-right: var(--spacing-4);
+    }
+
+    li {
+      padding-right: var(--spacing-3);
+      margin-bottom: var(--spacing-2);
+      position: relative;
+    }
+
+    li::before {
+      position: absolute;
+      right: -5px;
+      font-weight: bold;
+      font-size: 1.2em;
+      line-height: 1;
+    }
+
+    ul > li::before {
+      content: "✓";
+      color: var(--color-primary);
+    }
+    
+    ul ul {
+      margin-top: var(--spacing-2);
+      padding-right: var(--spacing-4);
+    }
+    
+    ul ul > li::before {
+      content: "•";
+      color: var(--color-muted);
+    }
+
+    /* --- 4. Flowchart Styles --- */
+    .flowchart-container {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-5);
+      max-width: 700px;
+      margin-inline: auto;
+    }
+
+    .flowchart-title {
+      text-align: center;
+      margin-bottom: var(--spacing-5);
+    }
+
+    .node {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      background-color: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-md);
+      padding: var(--spacing-3);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .node:hover {
+      transform: translateY(-3px);
+      border-color: var(--color-primary);
+    }
+
+    .node-icon {
+      flex-shrink: 0;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+
+    .node-icon svg { width: 24px; height: 24px; }
+    .node-content { text-align: right; flex-grow: 1; }
+    .node-title { font-weight: 600; font-size: 1.1rem; color: var(--color-dark); }
+    .node-desc { font-size: 0.9rem; color: var(--color-muted); margin-top: var(--spacing-1); }
+
+    /* Node Color Variations */
+    .node-user .node-icon    { background-color: rgba(var(--color-primary-rgb), 0.1); color: var(--color-primary); }
+    .node-db .node-icon      { background-color: rgba(88, 214, 241, 0.1); color: var(--color-info); }
+    .node-queue .node-icon   { background-color: rgba(227, 179, 65, 0.1); color: var(--color-warning); }
+    .node-system .node-icon  { background-color: rgba(139, 148, 158, 0.1); color: var(--color-muted); }
+    .node-logic .node-icon   { background-color: rgba(255, 123, 114, 0.1); color: var(--color-code-text); }
+    .node-end .node-icon     { background-color: rgba(86, 211, 100, 0.1); color: var(--color-success); }
+
+    .connector {
+      height: 40px;
+      width: 2px;
+      background-color: var(--color-border);
+      margin: var(--spacing-3) auto;
+      position: relative;
+    }
+
+    .connector::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid var(--color-muted);
+    }
+
+    .path-title {
+      text-align: center;
+      font-weight: 500;
+      margin: var(--spacing-4) 0 var(--spacing-3);
+      padding: var(--spacing-2);
+      border-radius: var(--border-radius-md);
+      border: 1px solid var(--color-border);
+    }
+
+    .path-online { color: var(--color-success); }
+    .path-offline { color: var(--color-danger); }
+
+    /* --- 5. Responsive Design --- */
+    @media (max-width: 768px) {
+      body { padding: var(--spacing-3); }
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.5rem; }
+      .section, .flowchart-container { padding: var(--spacing-4); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>استراتژی بک‌اند برای سیستم گفتگوی یکپارچه</h1>
+      <p>یک پلتفرم ارتباطی مدرن برای مدیریت پشتیبانی مشتریان بر پایه MongoDB</p>
+    </header>
+
+    <div class="section">
+      <h2>معماری و تکنولوژی‌ها</h2>
+      <p>سیستم بر پایه معماری میکروسرویس طراحی شده و از تکنولوژی‌های زیر استفاده می‌کند:</p>
+      <ul>
+        <li><strong>پایگاه داده اصلی (MongoDB):</strong> برای ذخیره‌سازی تمام گفتگوها و پیام‌ها به صورت داکیومنت‌های BSON. این ساختار انعطاف‌پذیر و مقیاس‌پذیر است.</li>
+        <li><strong>پایگاه داده حافظه موقت (Redis):</strong> برای مدیریت وضعیت لحظه‌ای (آنلاین/آفلاین) اپراتورها، صف‌های انتظار و کش کردن اطلاعات ضروری.</li>
+        <li><strong>ارتباط همزمان (WebSockets):</strong> برای تبادل پیام‌های زنده بین کاربر و اپراتور.</li>
+        <li><strong>صف پیام (Message Queue):</strong> برای مدیریت و توزیع بار درخواست‌های جدید به صورت غیرهمزمان بین Worker ها.</li>
+        <li>
+          <strong>سرویس‌ها:</strong>
+          <ul>
+            <li><strong>سرویس احراز هویت:</strong> مدیریت کاربران، نشست‌ها (Sessions) و توکن‌ها در کالکشن `users`.</li>
+            <li><strong>سرویس گفتگو (Conversation):</strong> هسته اصلی سیستم برای مدیریت ایجاد، تخصیص و تبادل پیام‌ها.</li>
+            <li><strong>سرویس نوتیفیکیشن:</strong> ارسال اعلان‌های ایمیل و پوش.</li>
+            <li><strong>API Gateway:</strong> نقطه ورود یکپارچه برای تمام درخواست‌ها.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>۱. مدل داده یکپارچه در MongoDB</h2>
+      <p>به جای جداول متعدد، از کالکشن‌های داکیومنتی استفاده می‌کنیم. این مدل برای سیستم گفتگو ایده‌آل است زیرا تمام اطلاعات یک مکالمه در یک مکان واحد ذخیره می‌شود.</p>
+      <ul>
+        <li><strong>کالکشن `chats`:</strong> هر داکیومنت در این کالکشن نماینده یک گفتگوی کامل است.</li>
+        <li><strong>پیام‌های تو در تو (Embedded Messages):</strong> تمام پیام‌ها به صورت یک آرایه به نام `messages` در همان داکیومنت چت ذخیره می‌شوند.</li>
+        <li><strong>مزیت کلیدی:</strong> این مدل باعث می‌شود کل تاریخچه یک گفتگو با یک کوئری ساده و بدون نیاز به `JOIN` قابل بازیابی باشد که سرعت خواندن را به شدت افزایش می‌دهد.</li>
+      </ul>
+      <h3>مدیریت وضعیت و نوع گفتگو</h3>
+      <ul>
+        <li><code>OPEN</code>: گفتگو باز است و در حال رسیدگی توسط اپراتور می‌باشد.</li>
+        <li><code>PENDING</code>: گفتگو در صف انتظار برای تخصیص به یک اپراتور است.</li>
+        <li><code>CLOSED</code>: گفتگو حل شده و بسته شده است.</li>
+        <li><b>نوع گفتگو:</b> فیلد <code>type</code> مشخص می‌کند که گفتگو یک <code>CHAT</code> (زنده) است یا یک <code>TICKET</code> (غیرهمزمان).</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>۲. فلو کاری سیستم گفتگوی یکپارچه</h2>
+      <p>این فلو برای هر دو نوع چت زنده و تیکت عمل می‌کند.</p>
+      <ul>
+        <li>
+          <strong>شروع گفتگو:</strong> کاربر اولین پیام خود را ارسال می‌کند.
+          <ul>
+            <li>سرور یک <strong>داکیومنت</strong> جدید در کالکشن `chats` با وضعیت `PENDING` ایجاد کرده و پیام را در آرایه `messages` آن ذخیره می‌کند.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>تولید رویداد (Producer):</strong>
+          <ul>
+            <li>شناسه داکیومنت چت (<code>chat_id</code>) به یک <strong>صف پیام</strong> ارسال می‌شود تا پردازش تخصیص در پس‌زمینه انجام شود.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>پردازش توسط ورکرها (Consumers):</strong>
+          <ul>
+            <li>یک ورکر پیام را از صف برمی‌دارد و با استفاده از اطلاعات لحظه‌ای در <strong>Redis</strong>، بهترین اپراتور آنلاین را پیدا می‌کند.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>به‌روزرسانی و اطلاع‌رسانی:</strong>
+          <ul>
+            <li>در صورت یافتن اپراتور، ورکر <strong>داکیومنت</strong> چت را با شناسه اپراتور آپدیت کرده، وضعیت را به <code>OPEN</code> و نوع را به <code>CHAT</code> تغییر می‌دهد و از طریق <strong>WebSocket</strong> به اپراتور اطلاع می‌دهد.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>سناریوی عدم وجود اپراتور آنلاین:</strong>
+          <ul>
+            <li>اگر هیچ اپراتوری آنلاین نباشد، وضعیت `PENDING` باقی مانده و نوع آن به <code>TICKET</code> تغییر می‌کند تا در اولین فرصت رسیدگی شود.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="flowchart-container">
+      <h2 class="flowchart-title">فلوچارت پردازش پیام در سیستم</h2>
+
+      <div class="node node-user">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">۱. کاربر پیامی ارسال می‌کند</div>
+          <div class="node-desc">اولین نقطه تماس؛ کاربر یک پیام جدید را آغاز می‌کند.</div>
+        </div>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node node-db">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7a8 8 0 0116 0"></path></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">۲. ایجاد داکیومنت چت در MongoDB</div>
+          <div class="node-desc">یک داکیومنت جدید برای گفتگو با وضعیت <code>PENDING</code> ایجاد می‌شود.</div>
+        </div>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node node-queue">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8"></path></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">۳. ارسال رویداد به صف پیام</div>
+          <div class="node-desc">شناسه گفتگو (<code>chat_id</code>) به صف پیام برای پردازش غیرهمزمان ارسال می‌شود.</div>
+        </div>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node node-system">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">۴. ورکر رویداد را پردازش می‌کند</div>
+          <div class="node-desc">یک ورکر آزاد، پیام را از صف برداشته و منطق تخصیص را آغاز می‌کند.</div>
+        </div>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node node-logic">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">۵. بررسی وضعیت اپراتورها در Redis</div>
+          <div class="node-desc">ورکر از Redis استعلام می‌گیرد: آیا اپراتور آنلاینی در دسترس است؟</div>
+        </div>
+      </div>
+
+      <div class="path-title path-online">مسیر الف: اگر اپراتور آنلاین بود</div>
+
+      <div class="node node-system">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.5a2.25 2.25 0 012.25-2.25H18.75a2.25 2.25 0 012.25 2.25v.001H3v-.001z"></path></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">تخصیص گفتگو و شروع چت زنده</div>
+          <div class="node-desc">گفتگو به اپراتور تخصیص یافته، نوع به <code>CHAT</code> تغییر کرده و اطلاع‌رسانی می‌شود.</div>
+        </div>
+      </div>
+
+      <div class="path-title path-offline">مسیر ب: اگر اپراتور آنلاین نبود</div>
+
+      <div class="node node-db">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">گفتگو به تیکت تبدیل می‌شود</div>
+          <div class="node-desc">نوع گفتگو به <code>TICKET</code> تغییر کرده و در صف انتظار باقی می‌ماند.</div>
+        </div>
+      </div>
+
+      <div class="path-title" style="color: var(--color-info)">مرحله نهایی: برای هر دو مسیر</div>
+
+      <div class="node node-end">
+        <div class="node-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <div class="node-content">
+          <div class="node-title">پایان گفتگو</div>
+          <div class="node-desc">پس از حل مشکل، وضعیت گفتگو به <code>CLOSED</code> تغییر کرده و در دیتابیس ذخیره می‌شود.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
